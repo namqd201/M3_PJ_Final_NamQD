@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -29,7 +30,7 @@ public class Student extends BaseEntity {
     @Column(name = "class_name")
     private String className;
 
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     private String address;
 }

@@ -1,20 +1,27 @@
 package com.tmdt.m3_pj_final_namqd.config.jwt;
 
+import com.tmdt.m3_pj_final_namqd.entity.User;
+import com.tmdt.m3_pj_final_namqd.exception.AppException;
+import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
 
-    public JwtFilter(JwtProvider jwtProvider) {
+    public JwtFilter(JwtProvider jwtProvider, UserRepository userRepository) {
         this.jwtProvider = jwtProvider;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -29,15 +36,30 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = header.substring(7);
 
             if (jwtProvider.validateToken(token)) {
+
                 String username = jwtProvider.getUsernameFromToken(token);
 
-                // TODO: load user từ DB
-                // tạm thời set auth đơn giản
-                var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        username, null, java.util.Collections.emptyList()
-                );
+                User user = userRepository.findByUsernameAndIsDeletedFalse(username).orElse(null);
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                if (user != null) {
+
+                    if (user.isDeleted()) {
+                        throw new AppException("USER_NOT_FOUND");
+                    }
+
+                    if (!user.getIsActive()) {
+                        throw new AppException("USER_DISABLED");
+                    }
+
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    user,  // principal
+                                    null,
+                                    Collections.emptyList() // chưa có role
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             }
         }
 

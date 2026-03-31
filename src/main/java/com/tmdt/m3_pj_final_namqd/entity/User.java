@@ -14,7 +14,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLDelete(sql = "UPDATE users SET is_deleted = true, deleted_at = now() WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 public class User extends BaseEntity{
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String username;
 
     private String passwordHash;
@@ -22,7 +22,6 @@ public class User extends BaseEntity{
     @Column(name = "full_name")
     private String fullName;
 
-    @Column(unique = true)
     private String email;
 
     @Column(name = "phone_number", length = 10)
@@ -30,4 +29,7 @@ public class User extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 }

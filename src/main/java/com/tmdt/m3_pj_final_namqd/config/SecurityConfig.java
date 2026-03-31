@@ -1,38 +1,50 @@
 package com.tmdt.m3_pj_final_namqd.config;
 
+import com.tmdt.m3_pj_final_namqd.config.jwt.JwtAuthenticationEntryPoint;
 import com.tmdt.m3_pj_final_namqd.config.jwt.JwtFilter;
 import com.tmdt.m3_pj_final_namqd.config.jwt.JwtProvider;
+import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtProvider jwtProvider) throws Exception {
+        public SecurityFilterChain filterChain(HttpSecurity http, JwtProvider jwtProvider, UserRepository userRepository
+                                                , JwtAuthenticationEntryPoint entryPoint) throws Exception {
 
-        JwtFilter jwtFilter = new JwtFilter(jwtProvider);
+            JwtFilter jwtFilter = new JwtFilter(jwtProvider, userRepository);
 
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api/auth/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter,
-                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+            http
+                    .csrf(csrf -> csrf.disable())
+                    .exceptionHandling(ex -> ex
+                            .authenticationEntryPoint(entryPoint)
+                    )
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/api/auth/**"
+                            ).permitAll()
+//                            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                            .anyRequest().authenticated()
+                    )
+                    .addFilterBefore(jwtFilter,
+                            org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+            return http.build();
+        }
 
     @Bean
-    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
