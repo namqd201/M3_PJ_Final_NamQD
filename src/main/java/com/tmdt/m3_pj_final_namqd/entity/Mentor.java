@@ -11,7 +11,7 @@ import lombok.Setter;
 public class Mentor extends BaseEntity{
 
     @OneToOne
-    @MapsId // Lấy ID của User làm ID của Student
+    @MapsId // Lấy ID của User làm ID của Mentor
     @JoinColumn(name = "id")
     private User user;
 

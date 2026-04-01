@@ -10,6 +10,7 @@ import com.tmdt.m3_pj_final_namqd.service.AuthService;
 import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +42,7 @@ public class AuthController {
     public ApiResponse<UserResponse> getCurrentUser(Authentication authentication) {
 
         if (authentication == null || authentication.getPrincipal() == null) {
-            throw new AppException("Unauthorized");
+            throw new AppException("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
         User user = (User) authentication.getPrincipal();

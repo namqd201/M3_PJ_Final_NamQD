@@ -2,13 +2,13 @@ package com.tmdt.m3_pj_final_namqd.service;
 
 import com.tmdt.m3_pj_final_namqd.config.jwt.JwtProvider;
 import com.tmdt.m3_pj_final_namqd.dto.request.LoginRequest;
-import com.tmdt.m3_pj_final_namqd.dto.request.RegisterRequest;
+import com.tmdt.m3_pj_final_namqd.dto.request.user.RegisterRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.UserResponse;
-import com.tmdt.m3_pj_final_namqd.entity.Role;
 import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +24,18 @@ public class AuthService {
 
     public String login(LoginRequest request) {
 
-        User user = userRepository.findByUsernameAndIsDeletedFalse(request.getUsername())
-                .orElseThrow(() -> new AppException("USER_NOT_FOUND"));
+        User user = userRepository
+                .findByUsernameAndIsDeletedFalse(request.getUsername())
+                .orElseThrow(() ->
+                        new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED)
+                );
 
         if (!user.getIsActive()) {
-            throw new AppException("USER_DISABLED");
+            throw new AppException("USER_DISABLED", HttpStatus.FORBIDDEN);
         }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new AppException("INCORRECT_PASSWORD");
+            throw new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
         }
 
         return jwtProvider.generateToken(user.getUsername());

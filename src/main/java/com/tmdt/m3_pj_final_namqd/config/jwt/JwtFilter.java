@@ -1,5 +1,7 @@
 package com.tmdt.m3_pj_final_namqd.config.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
@@ -7,21 +9,27 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
+    private final ObjectMapper mapper;
 
-    public JwtFilter(JwtProvider jwtProvider, UserRepository userRepository) {
+    public JwtFilter(JwtProvider jwtProvider, UserRepository userRepository, ObjectMapper mapper) {
         this.jwtProvider = jwtProvider;
         this.userRepository = userRepository;
+        this.mapper = mapper;
     }
 
     @Override
@@ -30,39 +38,62 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+        try {
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+            String header = request.getHeader("Authorization");
 
-            if (jwtProvider.validateToken(token)) {
+            if (header != null && header.startsWith("Bearer ")) {
 
-                String username = jwtProvider.getUsernameFromToken(token);
+                String token = header.substring(7);
 
-                User user = userRepository.findByUsernameAndIsDeletedFalse(username).orElse(null);
+                if (jwtProvider.validateToken(token)) {
 
-                if (user != null) {
+                    String username = jwtProvider.getUsernameFromToken(token);
 
-                    if (user.isDeleted()) {
-                        throw new AppException("USER_NOT_FOUND");
+                    User user = userRepository
+                            .findByUsernameAndIsDeletedFalse(username)
+                            .orElse(null);
+
+                    if (user != null) {
+
+                        if (!user.getIsActive()) {
+                            throw new AppException("USER_DISABLED", HttpStatus.FORBIDDEN);
+                        }
+
+                        // MAP ROLE -> GrantedAuthority
+                        var authorities = List.of(
+                                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                        );
+
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        user,
+                                        null,
+                                        authorities
+                                );
+
+                        SecurityContextHolder.getContext().setAuthentication(auth);
                     }
-
-                    if (!user.getIsActive()) {
-                        throw new AppException("USER_DISABLED");
-                    }
-
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                    user,  // principal
-                                    null,
-                                    Collections.emptyList() // chưa có role
-                            );
-
-                    SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+
+        } catch (AppException ex) {
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("code", ex.getCode());
+            body.put("message", ex.getMessage());
+
+            response.setStatus(ex.getStatus().value());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            mapper.writeValue(response.getWriter(), body);
+            return;
+        }
     }
 }

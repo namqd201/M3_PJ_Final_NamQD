@@ -1,4 +1,4 @@
-package com.tmdt.m3_pj_final_namqd.dto.request;
+package com.tmdt.m3_pj_final_namqd.dto.request.user;
 
 import lombok.Getter;
 import lombok.Setter;

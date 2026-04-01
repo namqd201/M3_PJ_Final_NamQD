@@ -1,9 +1,9 @@
 package com.tmdt.m3_pj_final_namqd.controller;
 
-import com.tmdt.m3_pj_final_namqd.dto.request.RegisterRequest;
-import com.tmdt.m3_pj_final_namqd.dto.request.UpdateUserRequest;
-import com.tmdt.m3_pj_final_namqd.dto.request.UpdateUserRoleRequest;
-import com.tmdt.m3_pj_final_namqd.dto.request.UpdateUserStatusRequest;
+import com.tmdt.m3_pj_final_namqd.dto.request.user.RegisterRequest;
+import com.tmdt.m3_pj_final_namqd.dto.request.user.UpdateUserRequest;
+import com.tmdt.m3_pj_final_namqd.dto.request.user.UpdateUserRoleRequest;
+import com.tmdt.m3_pj_final_namqd.dto.request.user.UpdateUserStatusRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.ApiResponse;
 import com.tmdt.m3_pj_final_namqd.dto.response.UserResponse;
 import com.tmdt.m3_pj_final_namqd.entity.User;
@@ -12,6 +12,9 @@ import com.tmdt.m3_pj_final_namqd.service.UserService;
 import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -33,46 +36,51 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin tạo tài khoản mới")
-    public ApiResponse<String> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> register(
+            @Valid @RequestBody RegisterRequest request) {
 
-        return ResponseUtil.success(
-                authService.register(request),
-                "Đăng ký thành công"
-        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseUtil.success(
+                        authService.register(request),
+                        "Đăng ký thành công"
+                ));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin lấy danh sách tài khoản")
-    public ApiResponse<List<UserResponse>> getAllUsers(
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
             @RequestParam(required = false) String role
     ) {
-        return ResponseUtil.success(
+        return ResponseEntity.ok(
+                ResponseUtil.success(
                 userService.getAllUsers(role),
-                "Lấy danh sách user thành công"
+                "Lấy danh sách user thành công")
         );
     }
 
     @GetMapping("/{user_id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin lấy thông tin tài khoản theo id")
-    public ApiResponse<UserResponse> getUserById(@PathVariable Long user_id) {
-        return ResponseUtil.success(
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long user_id) {
+        return ResponseEntity.ok(ResponseUtil.success(
                 userService.getUserById(user_id),
-                "Lấy chi tiết user thành công"
+                "Lấy chi tiết user thành công")
         );
     }
 
     @PutMapping("/{user_id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin cập nhật thông tin người dùng")
-    public ApiResponse<UserResponse> updateUser(
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+            @Valid
             @PathVariable Long user_id,
             @RequestBody UpdateUserRequest request) {
 
-        return ResponseUtil.success(
+        return ResponseEntity.ok(
+                ResponseUtil.success(
                 userService.updateUser(user_id, request),
-                "Cập nhật người dùng thành công"
+                "Cập nhật người dùng thành công")
         );
     }
 
@@ -80,13 +88,14 @@ public class UserController {
     @PatchMapping("/{user_id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin cập nhật trạng thái kích hoạt người dùng")
-    public ApiResponse<UserResponse> updateUserStatus(
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(
             @PathVariable("user_id") Long userId,
             @RequestBody UpdateUserStatusRequest request) {
 
-        return ResponseUtil.success(
+        return ResponseEntity.ok(
+                ResponseUtil.success(
                 userService.updateUserStatus(userId, request),
-                "Cập nhật trạng thái thành công"
+                "Cập nhật trạng thái thành công")
         );
     }
 
@@ -94,16 +103,17 @@ public class UserController {
     @PatchMapping("/{user_id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin cập nhật vai trò người dùng")
-    public ApiResponse<UserResponse> updateUserRole(
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserRole(
             @PathVariable("user_id") Long userId,
             @RequestBody UpdateUserRoleRequest request,
             Authentication authentication) {
 
         User currentUser = (User) authentication.getPrincipal();
 
-        return ResponseUtil.success(
+        return ResponseEntity.ok(
+                ResponseUtil.success(
                 userService.updateUserRole(userId, request, currentUser),
-                "Cập nhật role thành công"
+                "Cập nhật role thành công")
         );
     }
 
@@ -111,7 +121,7 @@ public class UserController {
     @DeleteMapping("/{user_id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin xóa mềm người dùng")
-    public ApiResponse<String> deleteUser(
+    public ResponseEntity<ApiResponse<String>> deleteUser(
             @PathVariable("user_id") Long userId,
             Authentication authentication) {
 
@@ -119,9 +129,10 @@ public class UserController {
 
         userService.deleteUser(userId, currentUser);
 
-        return ResponseUtil.success(
+        return ResponseEntity.ok(
+                ResponseUtil.success(
                 null,
-                "Xóa người dùng thành công"
+                "Xóa người dùng thành công")
         );
     }
 }
