@@ -27,7 +27,7 @@ public class AssessmentRoundService {
     // get all
     public List<AssessmentRoundResponse> getAll(Long phaseId) {
         List<AssessmentRound> rounds = (phaseId != null)
-                ? roundRepo.findByPhaseId(phaseId)
+                ? roundRepo.findByPhase_Id(phaseId)
                 : roundRepo.findAll();
 
         return rounds.stream().map(this::mapToResponse).toList();
@@ -86,7 +86,7 @@ public class AssessmentRoundService {
         roundRepo.save(round);
 
         // xoá cũ -> insert lại
-        roundCriteriaRepo.deleteByAssessmentRoundId(id);
+        roundCriteriaRepo.deleteByAssessmentRound_Id(id);
         saveCriteria(round, request.getCriteria());
 
         return mapToResponse(round);
@@ -98,7 +98,7 @@ public class AssessmentRoundService {
                 .orElseThrow(() -> new AppException("Không tìm thấy đợt đánh giá", HttpStatus.NOT_FOUND));
 
         //  check data liên quan
-        boolean hasResult = resultRepo.existsByAssessmentRoundId(id);
+        boolean hasResult = resultRepo.existsByAssessmentRound_Id(id);
 
         if (hasResult) {
             throw new AppException(
@@ -132,7 +132,7 @@ public class AssessmentRoundService {
 
     private AssessmentRoundResponse mapToResponse(AssessmentRound round) {
 
-        List<RoundCriteria> rcList = roundCriteriaRepo.findByAssessmentRoundId(round.getId());
+        List<RoundCriteria> rcList = roundCriteriaRepo.findByAssessmentRound_Id(round.getId());
 
         List<CriterionWeightResponse> criteria = rcList.stream()
                 .map(rc -> CriterionWeightResponse.builder()

@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface RoundCriteriaRepository extends JpaRepository<RoundCriteria, Long> {
 
-    List<RoundCriteria> findByAssessmentRoundId(Long roundId);
+    List<RoundCriteria> findByAssessmentRound_Id(Long roundId);
 
-    void deleteByAssessmentRoundId(Long roundId);
+    void deleteByAssessmentRound_Id(Long roundId);
 
-    boolean existsByEvaluationCriteriaId(Long criterionId);
+    boolean existsByEvaluationCriteria_Id(Long criterionId);
 
-    boolean existsByAssessmentRoundIdAndEvaluationCriteriaId(Long roundId, Long criteriaId);
+    boolean existsByAssessmentRound_IdAndEvaluationCriteria_Id(Long roundId, Long criteriaId);
 }

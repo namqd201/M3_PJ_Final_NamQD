@@ -21,4 +21,10 @@ public interface InternshipAssignmentRepository extends JpaRepository<Internship
             AssignmentStatus status
     );
 
+    List<InternshipAssignment> findByStudent_Id(Long studentId);
+
+    List<InternshipAssignment> findByMentor_Id(Long mentorId);
+
+    boolean existsByStudent_IdAndPhase_Id(Long studentId, Long phaseId);
+
 }

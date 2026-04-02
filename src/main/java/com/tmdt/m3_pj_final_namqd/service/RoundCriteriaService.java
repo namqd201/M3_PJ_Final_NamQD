@@ -24,7 +24,7 @@ public class RoundCriteriaService {
 
     public List<RoundCriteriaResponse> getByRound(Long roundId) {
 
-        List<RoundCriteria> list = repository.findByAssessmentRoundId(roundId);
+        List<RoundCriteria> list = repository.findByAssessmentRound_Id(roundId);
 
         return list.stream().map(this::mapToResponse).toList();
     }
@@ -45,7 +45,7 @@ public class RoundCriteriaService {
                 .orElseThrow(() -> new AppException("Criteria không tồn tại", HttpStatus.NOT_FOUND));
 
         // Không cho trùng
-        boolean exists = repository.existsByAssessmentRoundIdAndEvaluationCriteriaId(
+        boolean exists = repository.existsByAssessmentRound_IdAndEvaluationCriteria_Id(
                 request.getRoundId(), request.getCriteriaId()
         );
 
@@ -70,7 +70,10 @@ public class RoundCriteriaService {
                 .orElseThrow(() -> new AppException("Không tìm thấy", HttpStatus.NOT_FOUND));
 
         // Nếu đã có result → không cho sửa
-        boolean hasResult = resultRepo.existsByRoundCriteriaId(id);
+        boolean hasResult = resultRepo.existsByAssessmentRound_IdAndCriterion_Id(
+                entity.getAssessmentRound().getId(),
+                entity.getEvaluationCriteria().getId()
+        );
 
         if (hasResult) {
             throw new AppException("Đã có dữ liệu chấm điểm, không thể sửa", HttpStatus.CONFLICT);
@@ -90,7 +93,10 @@ public class RoundCriteriaService {
                 .orElseThrow(() -> new AppException("Không tìm thấy", HttpStatus.NOT_FOUND));
 
         // Nếu đã có result → không cho xóa
-        boolean hasResult = resultRepo.existsByRoundCriteriaId(id);
+        boolean hasResult = resultRepo.existsByAssessmentRound_IdAndCriterion_Id(
+                entity.getAssessmentRound().getId(),
+                entity.getEvaluationCriteria().getId()
+        );
 
         if (hasResult) {
             throw new AppException("Đã có dữ liệu chấm điểm, không thể xóa", HttpStatus.CONFLICT);
