@@ -7,7 +7,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table(name = "round_criteria")
+@Table(name = "round_criteria", uniqueConstraints = @UniqueConstraint(columnNames = {"round_id", "criterion_id"}))
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE round_criteria SET is_deleted = true, deleted_at = NOW() WHERE id = ?")
@@ -23,5 +23,13 @@ public class RoundCriteria extends BaseEntity {
     private EvaluationCriteria evaluationCriteria;
 
     @Column(nullable = false)
-    private Double weight; // Ví dụ: 0.3 (30%)
+    private Double weight;
+
+    @PrePersist
+    @PreUpdate
+    private void validateWeight() {
+        if (weight == null || weight <= 0) {
+            throw new IllegalArgumentException("Weight must be > 0");
+        }
+    }
 }

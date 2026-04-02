@@ -7,7 +7,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Table(name = "internship_assignments")
+@Table(name = "internship_assignments", uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "phase_id"}))
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE internship_assignments SET is_deleted = true, deleted_at = NOW() WHERE id = ?")

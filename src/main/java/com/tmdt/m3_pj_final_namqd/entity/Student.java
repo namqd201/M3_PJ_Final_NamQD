@@ -8,6 +8,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "students")
@@ -16,6 +17,9 @@ import java.util.Date;
 @SQLDelete(sql = "UPDATE students SET is_deleted = true, deleted_at = NOW() WHERE id=?")
 @SQLRestriction("is_deleted = false")
 public class Student extends BaseEntity {
+
+    @Id
+    private Long id;
 
     @OneToOne
     @MapsId // Lấy ID của User làm ID của Student
@@ -33,4 +37,7 @@ public class Student extends BaseEntity {
     private LocalDate dateOfBirth;
 
     private String address;
+
+    @OneToMany(mappedBy = "student")
+    private List<InternshipAssignment> assignments;
 }

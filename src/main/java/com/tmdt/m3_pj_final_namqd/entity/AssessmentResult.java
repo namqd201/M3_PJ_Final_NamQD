@@ -9,7 +9,7 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "assessment_results")
+@Table(name = "assessment_results", uniqueConstraints = @UniqueConstraint(columnNames = {"assignment_id", "round_id", "criterion_id"}))
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE assessment_results SET is_deleted = true, deleted_at = NOW() WHERE id = ?")
@@ -39,4 +39,16 @@ public class AssessmentResult extends BaseEntity {
 
     @Column(name = "evaluation_date")
     private LocalDateTime evaluationDate;
+
+    @PrePersist
+    @PreUpdate
+    private void validate() {
+        if (score == null || score < 0) {
+            throw new IllegalArgumentException("Score must be >= 0");
+        }
+
+        if (evaluator != null && evaluator.getRole() != Role.MENTOR) {
+            throw new IllegalArgumentException("Evaluator must be MENTOR");
+        }
+    }
 }
