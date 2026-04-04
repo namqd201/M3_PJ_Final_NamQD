@@ -14,6 +14,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 public class JwtFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
 
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
@@ -57,6 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     if (user != null) {
 
                         if (!user.getIsActive()) {
+                            log.warn("JWT rejected: inactive user '{}'", username);
                             throw new AppException("USER_DISABLED", HttpStatus.FORBIDDEN);
                         }
 
@@ -73,7 +78,11 @@ public class JwtFilter extends OncePerRequestFilter {
                                 );
 
                         SecurityContextHolder.getContext().setAuthentication(auth);
+                    } else {
+                        log.warn("JWT valid but user missing or deleted: '{}'", username);
                     }
+                } else {
+                    log.debug("JWT invalid or expired, uri={}", request.getRequestURI());
                 }
             }
 

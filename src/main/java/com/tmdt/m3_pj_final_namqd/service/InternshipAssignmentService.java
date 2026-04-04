@@ -15,6 +15,7 @@ import com.tmdt.m3_pj_final_namqd.repository.InternshipPhaseRepository;
 import com.tmdt.m3_pj_final_namqd.repository.MentorRepository;
 import com.tmdt.m3_pj_final_namqd.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InternshipAssignmentService {
     private final InternshipAssignmentRepository repo;
     private final StudentRepository studentRepo;
@@ -85,6 +87,9 @@ public class InternshipAssignmentService {
 
         repo.save(entity);
 
+        log.info("Internship assignment created: id={}, studentId={}, mentorId={}, phaseId={}, status={}",
+                entity.getId(), student.getId(), mentor.getId(), phase.getId(), entity.getStatus());
+
         return mapToResponse(entity);
     }
 
@@ -100,9 +105,12 @@ public class InternshipAssignmentService {
         } catch (IllegalArgumentException ex) {
             throw new AppException("Trạng thái không hợp lệ", HttpStatus.BAD_REQUEST);
         }
+        AssignmentStatus previous = entity.getStatus();
         entity.setStatus(newStatus);
 
         repo.save(entity);
+
+        log.info("Assignment status changed: id={}, {} -> {}", id, previous, newStatus);
 
         return mapToResponse(entity);
     }

@@ -8,6 +8,8 @@ import com.tmdt.m3_pj_final_namqd.entity.Role;
 import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.List;
 
 @Service
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
 
@@ -143,9 +147,13 @@ public class UserService {
             throw new AppException("FORBIDDEN_ACTION", HttpStatus.FORBIDDEN);
         }
 
+        Role previousRole = targetUser.getRole();
         targetUser.setRole(newRole);
 
         userRepository.save(targetUser);
+
+        log.info("User role changed: targetId={}, username={}, {} -> {}, byAdminId={}",
+                targetUser.getId(), targetUser.getUsername(), previousRole, newRole, currentUser.getId());
 
         return mapToResponse(targetUser);
     }
@@ -170,5 +178,8 @@ public class UserService {
         targetUser.setDeletedAt(LocalDateTime.now());
 
         userRepository.save(targetUser);
+
+        log.info("User soft-deleted: targetId={}, username={}, role={}, byAdminId={}",
+                targetUser.getId(), targetUser.getUsername(), targetUser.getRole(), currentUser.getId());
     }
 }

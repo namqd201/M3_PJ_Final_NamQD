@@ -8,6 +8,7 @@ import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -24,17 +26,21 @@ public class AuthService {
 
     public String login(LoginRequest request) {
 
+        String username = request.getUsername();
         User user = userRepository
-                .findByUsernameAndIsDeletedFalse(request.getUsername())
-                .orElseThrow(() ->
-                        new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED)
-                );
+                .findByUsernameAndIsDeletedFalse(username)
+                .orElseThrow(() -> {
+                    log.warn("Login failed: unknown username '{}'", username);
+                    return new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
+                });
 
         if (!user.getIsActive()) {
+            log.warn("Login failed: inactive user '{}'", username);
             throw new AppException("USER_DISABLED", HttpStatus.FORBIDDEN);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            log.warn("Login failed: wrong password for user '{}'", username);
             throw new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
         }
 
