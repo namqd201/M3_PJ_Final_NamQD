@@ -8,11 +8,13 @@ import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import com.tmdt.m3_pj_final_namqd.service.EvaluationCriteriaService;
 import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/evaluation_criteria")
 @RequiredArgsConstructor
-@Tag(name = "6. Evaluation Criteria", description = "APIs for evaluation criteria")
+@Tag(name = "06. Evaluation criteria", description = "Xem: ADMIN, MENTOR, STUDENT; tạo/sửa/xóa: ADMIN")
 public class EvaluationCriteriaController {
 
     private final EvaluationCriteriaService service;
@@ -33,6 +35,8 @@ public class EvaluationCriteriaController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
+    @Operation(summary = "Danh sách tiêu chí đánh giá")
     public ResponseEntity<ApiResponse<List<EvaluationCriteriaResponse>>> getAll() {
         return ResponseEntity.ok(
                 ResponseUtil.success(service.getAll(), "Lấy danh sách thành công")
@@ -40,6 +44,8 @@ public class EvaluationCriteriaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
+    @Operation(summary = "Chi tiết tiêu chí")
     public ResponseEntity<ApiResponse<EvaluationCriteriaResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(
                 ResponseUtil.success(service.getById(id), "Lấy chi tiết thành công")
@@ -47,6 +53,8 @@ public class EvaluationCriteriaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Tạo tiêu chí")
     public ResponseEntity<ApiResponse<EvaluationCriteriaResponse>> create(
             @Valid @RequestBody EvaluationCriteriaRequest request,
             Authentication auth
@@ -59,6 +67,8 @@ public class EvaluationCriteriaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Cập nhật tiêu chí")
     public ResponseEntity<ApiResponse<EvaluationCriteriaResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody EvaluationCriteriaRequest request,
@@ -73,6 +83,8 @@ public class EvaluationCriteriaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Xóa tiêu chí")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id,
             Authentication auth

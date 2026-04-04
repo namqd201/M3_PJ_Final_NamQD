@@ -11,13 +11,14 @@ import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "1. Authentication", description = "APIs for login & security")
+@Tag(name = "01. Authentication", description = "Đăng nhập (PUBLIC); /me yêu cầu ADMIN, MENTOR hoặc STUDENT")
 public class AuthController {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
@@ -31,6 +32,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
+    @Operation(summary = "Đăng nhập, nhận JWT", security = {})
     public ApiResponse<String> login(@RequestBody LoginRequest request) {
         return ResponseUtil.success(
                 authService.login(request),
@@ -38,7 +40,8 @@ public class AuthController {
         );
     }
     @GetMapping("/me")
-    @Operation(summary = "Get profile")
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
+    @Operation(summary = "Hồ sơ người dùng đang đăng nhập")
     public ApiResponse<UserResponse> getCurrentUser(Authentication authentication) {
 
         if (authentication == null || authentication.getPrincipal() == null) {

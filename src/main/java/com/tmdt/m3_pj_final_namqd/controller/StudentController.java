@@ -9,6 +9,7 @@ import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import com.tmdt.m3_pj_final_namqd.service.StudentService;
 import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
-@Tag(name = "3. Student", description = "APIs for student")
+@Tag(name = "03. Student management", description = "Danh sách: ADMIN, MENTOR (được gán); chi tiết/sửa: thêm STUDENT (chỉ bản thân); tạo: ADMIN")
 public class StudentController {
 
     private final StudentService studentService;
@@ -34,6 +35,7 @@ public class StudentController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','MENTOR')")
+    @Operation(summary = "Danh sách sinh viên (MENTOR chỉ thấy sinh viên được gán)")
     public ResponseEntity<ApiResponse<List<StudentResponse>>> getAllStudents(
             Authentication authentication) {
 
@@ -50,6 +52,8 @@ public class StudentController {
     }
 
     @GetMapping("/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
+    @Operation(summary = "Chi tiết sinh viên (STUDENT chỉ xem chính mình)")
     public ResponseEntity<ApiResponse<StudentResponse>> getStudentById(
             @PathVariable Long studentId,
             Authentication authentication
@@ -68,6 +72,8 @@ public class StudentController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Tạo hồ sơ sinh viên (gắn với user role STUDENT)")
     public ResponseEntity<ApiResponse<StudentResponse>> createStudent(
             @Valid @RequestBody CreateStudentRequest request,
             Authentication authentication
@@ -88,6 +94,8 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
+    @Operation(summary = "Cập nhật sinh viên (STUDENT chỉ sửa chính mình)")
     public ResponseEntity<ApiResponse<StudentResponse>> updateStudent(
             @PathVariable("id") Long studentId,
             @Valid @RequestBody UpdateStudentRequest request,

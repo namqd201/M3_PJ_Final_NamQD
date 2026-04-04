@@ -3,17 +3,15 @@ package com.tmdt.m3_pj_final_namqd.controller;
 import com.tmdt.m3_pj_final_namqd.dto.request.assessment_round.AssessmentRoundRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.ApiResponse;
 import com.tmdt.m3_pj_final_namqd.dto.response.AssessmentRoundResponse;
-import com.tmdt.m3_pj_final_namqd.entity.User;
-import com.tmdt.m3_pj_final_namqd.exception.AppException;
-import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import com.tmdt.m3_pj_final_namqd.service.AssessmentRoundService;
 import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,18 +19,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/assessment_rounds")
 @RequiredArgsConstructor
-@Tag(name = "7. Assessment Rounds", description = "APIs for assessment rounds")
+@Tag(name = "07. Assessment rounds", description = "Xem (lọc phase_id): ADMIN, MENTOR, STUDENT; CRUD: ADMIN")
 public class AssessmentRoundController {
     private final AssessmentRoundService service;
-    private final UserRepository userRepository;
-
-    private User getCurrentUser(Authentication auth) {
-        return userRepository.findByUsernameAndIsDeletedFalse(auth.getName())
-                .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
-    }
 
     // get all
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
+    @Operation(summary = "Danh sách đợt đánh giá (phaseId tùy chọn)")
     public ResponseEntity<ApiResponse<List<AssessmentRoundResponse>>> getAll(
             @RequestParam(required = false) Long phaseId
     ) {
@@ -46,6 +40,8 @@ public class AssessmentRoundController {
 
     // detail
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
+    @Operation(summary = "Chi tiết đợt đánh giá")
     public ResponseEntity<ApiResponse<AssessmentRoundResponse>> getById(
             @PathVariable Long id
     ) {
@@ -59,6 +55,8 @@ public class AssessmentRoundController {
 
     // create
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Tạo đợt đánh giá (kèm tiêu chí + trọng số)")
     public ResponseEntity<ApiResponse<AssessmentRoundResponse>> create(
             @Valid @RequestBody AssessmentRoundRequest request
     ) {
@@ -73,6 +71,8 @@ public class AssessmentRoundController {
 
     // ================= UPDATE =================
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Cập nhật đợt đánh giá")
     public ResponseEntity<ApiResponse<AssessmentRoundResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody AssessmentRoundRequest request
@@ -87,6 +87,8 @@ public class AssessmentRoundController {
 
     // ================= DELETE =================
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Xóa đợt đánh giá")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id
     ) {

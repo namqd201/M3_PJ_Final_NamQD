@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/assessment_results")
 @RequiredArgsConstructor
-@Tag(name = "8. Assessment Results", description = "APIs for assessment results (scores)")
+@Tag(name = "10. Assessment results", description = "Xem: ADMIN, MENTOR, STUDENT (lọc); tạo/sửa điểm: MENTOR được phân công")
 public class AssessmentResultController {
 
     private final AssessmentResultService service;
@@ -35,6 +36,7 @@ public class AssessmentResultController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
     @Operation(summary = "Danh sách kết quả đánh giá (theo quyền, lọc assignment_id, user_id)")
     public ResponseEntity<ApiResponse<List<AssessmentResultResponse>>> getAll(
             @RequestParam(required = false) Long assignmentId,
@@ -51,6 +53,7 @@ public class AssessmentResultController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "Tạo kết quả đánh giá (mentor được phân công)")
     public ResponseEntity<ApiResponse<AssessmentResultResponse>> create(
             @Valid @RequestBody AssessmentResultRequest request,
@@ -67,6 +70,7 @@ public class AssessmentResultController {
     }
 
     @PutMapping("/{resultId}")
+    @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "Cập nhật kết quả đánh giá do chính mentor tạo")
     public ResponseEntity<ApiResponse<AssessmentResultResponse>> update(
             @PathVariable Long resultId,

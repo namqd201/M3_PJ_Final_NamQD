@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "2. User", description = "APIs for user")
+@Tag(name = "02. User management", description = "Quản lý user — toàn bộ endpoint chỉ ADMIN")
 public class UserController {
     private final AuthService authService;
     private final UserService userService;
