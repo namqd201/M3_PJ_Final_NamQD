@@ -41,7 +41,7 @@ public class MentorController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     @Operation(summary = "Danh sách mentor (STUDENT: thông tin tổng quan)")
-    public ResponseEntity<ApiResponse<List<MentorResponse>>> getAll(Authentication auth) {
+    public ResponseEntity<ApiResponse<List<MentorResponse>>> getAll() {
 
         return ResponseEntity.ok(
                 ResponseUtil.success(
@@ -71,14 +71,13 @@ public class MentorController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tạo hồ sơ mentor (user role MENTOR)")
     public ResponseEntity<ApiResponse<MentorResponse>> create(
-            @Valid @RequestBody CreateMentorRequest request,
-            Authentication auth
+            @Valid @RequestBody CreateMentorRequest request
     ) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         ResponseUtil.success(
-                                mentorService.create(request, getCurrentUser(auth)),
+                                mentorService.create(request),
                                 "Tạo mentor thành công"
                         )
                 );

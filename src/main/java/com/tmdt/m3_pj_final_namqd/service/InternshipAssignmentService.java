@@ -31,18 +31,11 @@ public class InternshipAssignmentService {
     // ================= GET LIST =================
     public List<InternshipAssignmentResponse> getAll(User currentUser) {
 
-        List<InternshipAssignment> list;
-
-        switch (currentUser.getRole()) {
-
-            case ADMIN -> list = repo.findAll();
-
-            case MENTOR -> list = repo.findByMentor_Id(currentUser.getId());
-
-            case STUDENT -> list = repo.findByStudent_Id(currentUser.getId());
-
-            default -> throw new AppException("Không có quyền", HttpStatus.FORBIDDEN);
-        }
+        List<InternshipAssignment> list = switch (currentUser.getRole()) {
+            case ADMIN -> repo.findAll();
+            case MENTOR -> repo.findByMentor_Id(currentUser.getId());
+            case STUDENT -> repo.findByStudent_Id(currentUser.getId());
+        };
 
         return list.stream().map(this::mapToResponse).toList();
     }
@@ -68,11 +61,7 @@ public class InternshipAssignmentService {
     }
 
     // create
-    public InternshipAssignmentResponse create(InternshipAssignmentRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin", HttpStatus.FORBIDDEN);
-        }
+    public InternshipAssignmentResponse create(InternshipAssignmentRequest request) {
 
         Student student = studentRepo.findById(request.getStudentId())
                 .orElseThrow(() -> new AppException("Student không tồn tại", HttpStatus.NOT_FOUND));
@@ -100,13 +89,7 @@ public class InternshipAssignmentService {
     }
 
     // updaate status
-    public InternshipAssignmentResponse updateStatus(Long id,
-                                                     String status,
-                                                     User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin", HttpStatus.FORBIDDEN);
-        }
+    public InternshipAssignmentResponse updateStatus(Long id, String status) {
 
         InternshipAssignment entity = repo.findById(id)
                 .orElseThrow(() -> new AppException("Không tìm thấy", HttpStatus.NOT_FOUND));

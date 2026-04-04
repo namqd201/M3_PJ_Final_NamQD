@@ -3,8 +3,6 @@ package com.tmdt.m3_pj_final_namqd.service;
 import com.tmdt.m3_pj_final_namqd.dto.request.internship_phase.InternshipPhaseRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.InternshipPhaseResponse;
 import com.tmdt.m3_pj_final_namqd.entity.InternshipPhase;
-import com.tmdt.m3_pj_final_namqd.entity.Role;
-import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.InternshipPhaseRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,11 +36,7 @@ public class InternshipPhaseService {
 
     // create
     @Transactional
-    public InternshipPhaseResponse create(InternshipPhaseRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được tạo", HttpStatus.FORBIDDEN);
-        }
+    public InternshipPhaseResponse create(InternshipPhaseRequest request) {
 
         if (phaseRepository.existsByPhaseName(request.getPhaseName())) {
             throw new AppException("Tên giai đoạn đã tồn tại", HttpStatus.CONFLICT);
@@ -61,11 +55,7 @@ public class InternshipPhaseService {
 
     // update
     @Transactional
-    public InternshipPhaseResponse update(Long id, InternshipPhaseRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được cập nhật", HttpStatus.FORBIDDEN);
-        }
+    public InternshipPhaseResponse update(Long id, InternshipPhaseRequest request) {
 
         InternshipPhase phase = phaseRepository.findById(id)
                 .orElseThrow(() -> new AppException("Giai đoạn không tồn tại", HttpStatus.NOT_FOUND));
@@ -82,11 +72,7 @@ public class InternshipPhaseService {
 
     // delete
     @Transactional
-    public void delete(Long id, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được xóa", HttpStatus.FORBIDDEN);
-        }
+    public void delete(Long id) {
 
         InternshipPhase phase = phaseRepository.findById(id)
                 .orElseThrow(() -> new AppException("Giai đoạn không tồn tại", HttpStatus.NOT_FOUND));

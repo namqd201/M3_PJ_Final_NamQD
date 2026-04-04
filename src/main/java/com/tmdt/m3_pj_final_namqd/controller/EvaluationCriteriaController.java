@@ -3,9 +3,6 @@ package com.tmdt.m3_pj_final_namqd.controller;
 import com.tmdt.m3_pj_final_namqd.dto.request.EvaluationCriteriaRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.ApiResponse;
 import com.tmdt.m3_pj_final_namqd.dto.response.EvaluationCriteriaResponse;
-import com.tmdt.m3_pj_final_namqd.entity.User;
-import com.tmdt.m3_pj_final_namqd.exception.AppException;
-import com.tmdt.m3_pj_final_namqd.repository.UserRepository;
 import com.tmdt.m3_pj_final_namqd.service.EvaluationCriteriaService;
 import com.tmdt.m3_pj_final_namqd.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,12 +23,6 @@ import java.util.List;
 public class EvaluationCriteriaController {
 
     private final EvaluationCriteriaService service;
-    private final UserRepository userRepository;
-
-    private User getCurrentUser(Authentication auth) {
-        return userRepository.findByUsernameAndIsDeletedFalse(auth.getName())
-                .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','MENTOR','STUDENT')")
@@ -56,12 +46,11 @@ public class EvaluationCriteriaController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tạo tiêu chí")
     public ResponseEntity<ApiResponse<EvaluationCriteriaResponse>> create(
-            @Valid @RequestBody EvaluationCriteriaRequest request,
-            Authentication auth
+            @Valid @RequestBody EvaluationCriteriaRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponseUtil.success(
-                        service.create(request, getCurrentUser(auth)),
+                        service.create(request),
                         "Tạo tiêu chí thành công"
                 ));
     }
@@ -71,12 +60,11 @@ public class EvaluationCriteriaController {
     @Operation(summary = "Cập nhật tiêu chí")
     public ResponseEntity<ApiResponse<EvaluationCriteriaResponse>> update(
             @PathVariable Long id,
-            @Valid @RequestBody EvaluationCriteriaRequest request,
-            Authentication auth
+            @Valid @RequestBody EvaluationCriteriaRequest request
     ) {
         return ResponseEntity.ok(
                 ResponseUtil.success(
-                        service.update(id, request, getCurrentUser(auth)),
+                        service.update(id, request),
                         "Cập nhật tiêu chí thành công"
                 )
         );
@@ -85,13 +73,8 @@ public class EvaluationCriteriaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Xóa tiêu chí")
-    public ResponseEntity<ApiResponse<?>> delete(
-            @PathVariable Long id,
-            Authentication auth
-    ) {
-
-        service.delete(id, getCurrentUser(auth));
-
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id) {
+        service.delete(id);
         return ResponseEntity.ok(
                 ResponseUtil.success(null, "Xóa tiêu chí thành công")
         );

@@ -3,8 +3,6 @@ package com.tmdt.m3_pj_final_namqd.service;
 import com.tmdt.m3_pj_final_namqd.dto.request.EvaluationCriteriaRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.EvaluationCriteriaResponse;
 import com.tmdt.m3_pj_final_namqd.entity.EvaluationCriteria;
-import com.tmdt.m3_pj_final_namqd.entity.Role;
-import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.EvaluationCriteriaRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,11 +36,7 @@ public class EvaluationCriteriaService {
 
     // create
     @Transactional
-    public EvaluationCriteriaResponse create(EvaluationCriteriaRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được tạo", HttpStatus.FORBIDDEN);
-        }
+    public EvaluationCriteriaResponse create(EvaluationCriteriaRequest request) {
 
         if (repository.existsByCriterionName(request.getCriterionName())) {
             throw new AppException("Tên tiêu chí đã tồn tại", HttpStatus.CONFLICT);
@@ -60,11 +54,7 @@ public class EvaluationCriteriaService {
 
     // update
     @Transactional
-    public EvaluationCriteriaResponse update(Long id, EvaluationCriteriaRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được cập nhật", HttpStatus.FORBIDDEN);
-        }
+    public EvaluationCriteriaResponse update(Long id, EvaluationCriteriaRequest request) {
 
         EvaluationCriteria entity = repository.findById(id)
                 .orElseThrow(() -> new AppException("Tiêu chí không tồn tại", HttpStatus.NOT_FOUND));
@@ -86,11 +76,7 @@ public class EvaluationCriteriaService {
 
     // delete
     @Transactional
-    public void delete(Long id, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được xóa", HttpStatus.FORBIDDEN);
-        }
+    public void delete(Long id) {
 
         EvaluationCriteria entity = repository.findById(id)
                 .orElseThrow(() -> new AppException("Tiêu chí không tồn tại", HttpStatus.NOT_FOUND));

@@ -1,6 +1,8 @@
 package com.tmdt.m3_pj_final_namqd.exception;
 
 import com.tmdt.m3_pj_final_namqd.dto.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,9 +17,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     // ===== BUSINESS EXCEPTION =====
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Object>> handleAppException(AppException ex) {
+
+        if (ex.getStatus().is5xxServerError()) {
+            log.warn("AppException {} — {}", ex.getCode(), ex.getStatus());
+        } else {
+            log.debug("AppException {} — {}", ex.getCode(), ex.getStatus());
+        }
 
         return ResponseEntity
                 .status(ex.getStatus())
@@ -34,6 +44,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidationException(
             MethodArgumentNotValidException ex) {
+
+        log.debug("Validation failed: {}", ex.getBindingResult().getFieldErrors());
 
         List<Map<String, String>> errors = ex.getBindingResult()
                 .getFieldErrors()
@@ -72,7 +84,9 @@ public class GlobalExceptionHandler {
 
     // ===== FORBIDDEN =====
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAccessDenied() {
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
+
+        log.debug("Access denied: {}", ex.getMessage());
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
@@ -88,6 +102,8 @@ public class GlobalExceptionHandler {
     // ===== SYSTEM ERROR =====
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
+
+        log.error("Unhandled exception", ex);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

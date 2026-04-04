@@ -52,12 +52,11 @@ public class InternshipAssignmentController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tạo phân công (sinh viên — mentor — đợt)")
-    public ResponseEntity<ApiResponse<?>> create(@RequestBody InternshipAssignmentRequest request,
-                                                 Authentication auth) {
+    public ResponseEntity<ApiResponse<?>> create(@RequestBody InternshipAssignmentRequest request) {
 
         return ResponseEntity.ok(
                 ResponseUtil.success(
-                        service.create(request, (User) auth.getPrincipal()),
+                        service.create(request),
                         "Tạo phân công thành công"
                 )
         );
@@ -67,12 +66,11 @@ public class InternshipAssignmentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Cập nhật trạng thái phân công")
     public ResponseEntity<ApiResponse<?>> updateStatus(@PathVariable Long id,
-                                                       @RequestBody UpdateAssignmentStatusRequest request,
-                                                       Authentication auth) {
+                                                       @RequestBody UpdateAssignmentStatusRequest request) {
 
         return ResponseEntity.ok(
                 ResponseUtil.success(
-                        service.updateStatus(id, request.getStatus(), (User) auth.getPrincipal()),
+                        service.updateStatus(id, request.getStatus()),
                         "Cập nhật trạng thái thành công"
                 )
         );

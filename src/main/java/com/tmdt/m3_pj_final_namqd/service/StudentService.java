@@ -33,11 +33,9 @@ public class StudentService {
         List<Student> students;
 
         if (currentUser.getRole() == Role.ADMIN) {
-
             students = studentRepository.findAll();
-
-        } else if (currentUser.getRole() == Role.MENTOR) {
-
+        } else {
+            // MENTOR — controller chỉ cho ADMIN + MENTOR
             List<InternshipAssignment> assignments =
                     internshipAssignmentRepository.findByMentor_User_IdAndStatus(
                             currentUser.getId(),
@@ -48,9 +46,6 @@ public class StudentService {
                     .map(InternshipAssignment::getStudent)
                     .distinct()
                     .toList();
-
-        } else {
-            throw new AppException("Không có quyền truy cập", HttpStatus.FORBIDDEN);
         }
 
         return students.stream()
@@ -89,21 +84,14 @@ public class StudentService {
             if (!student.getId().equals(currentUser.getId())) {
                 throw new AppException("Chỉ được xem thông tin của chính bạn", HttpStatus.FORBIDDEN);
             }
+        } else {
+            throw new IllegalStateException("Unexpected role: " + role);
         }
-        else {
-            throw new AppException("Không có quyền truy cập", HttpStatus.FORBIDDEN);
-        }
-        // map DTO
         return mapToResponse(student);
     }
 
     @Transactional
-    public StudentResponse createStudent(CreateStudentRequest request, User currentUser) {
-
-        // CHECK ROLE
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin mới được tạo sinh viên", HttpStatus.FORBIDDEN);
-        }
+    public StudentResponse createStudent(CreateStudentRequest request) {
 
         // FIND USER
         User user = userRepository.findById(request.getUserId())
@@ -149,18 +137,9 @@ public class StudentService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new AppException("Sinh viên không tồn tại", HttpStatus.NOT_FOUND));
 
-        // CHECK ROLE
-        if (currentUser.getRole() == Role.ADMIN) {
-            // OK
-        } else if (currentUser.getRole() == Role.STUDENT) {
-
-            // chỉ được sửa chính mình
-            if (!student.getId().equals(currentUser.getId())) {
-                throw new AppException("Bạn chỉ được cập nhật thông tin của mình", HttpStatus.FORBIDDEN);
-            }
-
-        } else {
-            throw new AppException("Không có quyền", HttpStatus.FORBIDDEN);
+        if (currentUser.getRole() == Role.STUDENT
+                && !student.getId().equals(currentUser.getId())) {
+            throw new AppException("Bạn chỉ được cập nhật thông tin của mình", HttpStatus.FORBIDDEN);
         }
 
         // UPDATE (partial update)

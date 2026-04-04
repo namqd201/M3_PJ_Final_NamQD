@@ -75,19 +75,12 @@ public class StudentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tạo hồ sơ sinh viên (gắn với user role STUDENT)")
     public ResponseEntity<ApiResponse<StudentResponse>> createStudent(
-            @Valid @RequestBody CreateStudentRequest request,
-            Authentication authentication
+            @Valid @RequestBody CreateStudentRequest request
     ) {
-
-        String username = authentication.getName();
-
-        User currentUser = userRepository.findByUsernameAndIsDeletedFalse(username)
-                .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         ResponseUtil.success(
-                                studentService.createStudent(request, currentUser),
+                                studentService.createStudent(request),
                                 "Tạo sinh viên thành công"
                         )
                 );

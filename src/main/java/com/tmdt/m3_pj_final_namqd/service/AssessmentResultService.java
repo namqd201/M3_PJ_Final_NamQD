@@ -7,7 +7,6 @@ import com.tmdt.m3_pj_final_namqd.entity.AssessmentResult;
 import com.tmdt.m3_pj_final_namqd.entity.AssessmentRound;
 import com.tmdt.m3_pj_final_namqd.entity.EvaluationCriteria;
 import com.tmdt.m3_pj_final_namqd.entity.InternshipAssignment;
-import com.tmdt.m3_pj_final_namqd.entity.Role;
 import com.tmdt.m3_pj_final_namqd.entity.User;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
 import com.tmdt.m3_pj_final_namqd.repository.AssessmentResultRepository;
@@ -41,7 +40,6 @@ public class AssessmentResultService {
             case ADMIN -> loadForAdmin(assignmentId, userId);
             case MENTOR -> loadForMentor(currentUser.getId(), assignmentId);
             case STUDENT -> loadForStudent(currentUser.getId(), assignmentId);
-            default -> throw new AppException("Không có quyền", HttpStatus.FORBIDDEN);
         };
 
         return list.stream()
@@ -103,10 +101,6 @@ public class AssessmentResultService {
     @Transactional
     public AssessmentResultResponse create(AssessmentResultRequest request, User currentUser) {
 
-        if (currentUser.getRole() != Role.MENTOR) {
-            throw new AppException("Chỉ mentor được tạo kết quả đánh giá", HttpStatus.FORBIDDEN);
-        }
-
         InternshipAssignment assignment = assignmentRepo.findById(request.getAssignmentId())
                 .orElseThrow(() -> new AppException("Phân công không tồn tại", HttpStatus.NOT_FOUND));
 
@@ -152,10 +146,6 @@ public class AssessmentResultService {
 
     @Transactional
     public AssessmentResultResponse update(Long resultId, AssessmentResultUpdateRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.MENTOR) {
-            throw new AppException("Chỉ mentor được cập nhật kết quả đánh giá", HttpStatus.FORBIDDEN);
-        }
 
         AssessmentResult entity = resultRepo.findById(resultId)
                 .orElseThrow(() -> new AppException("Không tìm thấy kết quả đánh giá", HttpStatus.NOT_FOUND));

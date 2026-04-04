@@ -47,11 +47,7 @@ public class MentorService {
 
     // create
     @Transactional
-    public MentorResponse create(CreateMentorRequest request, User currentUser) {
-
-        if (currentUser.getRole() != Role.ADMIN) {
-            throw new AppException("Chỉ admin được tạo mentor", HttpStatus.FORBIDDEN);
-        }
+    public MentorResponse create(CreateMentorRequest request) {
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
