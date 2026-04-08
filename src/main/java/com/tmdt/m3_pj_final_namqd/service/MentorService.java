@@ -14,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -24,25 +26,47 @@ public class MentorService {
 
     // get all
     public List<MentorResponse> getAll() {
-        return mentorRepository.findAll()
+        List<MentorResponse> mentorProfiles = mentorRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+
+        Set<Long> existingIds = new HashSet<>(
+                mentorProfiles.stream().map(MentorResponse::getId).toList()
+        );
+
+        List<MentorResponse> missingProfiles = userRepository.findByRoleAndIsDeletedFalse(Role.MENTOR)
+                .stream()
+                .filter(user -> !existingIds.contains(user.getId()))
+                .map(user -> mapToResponse(user, null))
+                .toList();
+
+        return java.util.stream.Stream.concat(
+                mentorProfiles.stream(),
+                missingProfiles.stream()
+        ).toList();
     }
 
     // get by id
     public MentorResponse getById(Long id, User currentUser) {
-
-        Mentor mentor = mentorRepository.findById(id)
-                .orElseThrow(() -> new AppException("Mentor không tồn tại", HttpStatus.NOT_FOUND));
-
-        if (currentUser.getRole() == Role.MENTOR) {
-            if (!mentor.getId().equals(currentUser.getId())) {
-                throw new AppException("Chỉ được xem thông tin của mình", HttpStatus.FORBIDDEN);
-            }
+        if (currentUser.getRole() == Role.MENTOR && !id.equals(currentUser.getId())) {
+            throw new AppException("Chỉ được xem thông tin của mình", HttpStatus.FORBIDDEN);
         }
 
-        return mapToResponse(mentor);
+        Mentor mentor = mentorRepository.findById(id)
+                .or(() -> mentorRepository.findByUser_Id(id))
+                .orElse(null);
+        if (mentor != null) {
+            return mapToResponse(mentor);
+        }
+
+        User mentorUser = userRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new AppException("Mentor không tồn tại", HttpStatus.NOT_FOUND));
+        if (mentorUser.getRole() != Role.MENTOR) {
+            throw new AppException("Mentor không tồn tại", HttpStatus.NOT_FOUND);
+        }
+
+        return mapToResponse(mentorUser, null);
     }
 
     // create
@@ -114,6 +138,18 @@ public class MentorService {
                 .phoneNumber(user.getPhoneNumber())
                 .department(mentor.getDepartment())
                 .academicRank(mentor.getAcademicRank())
+                .build();
+    }
+
+    private MentorResponse mapToResponse(User user, Mentor mentorProfile) {
+        return MentorResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .department(mentorProfile != null ? mentorProfile.getDepartment() : null)
+                .academicRank(mentorProfile != null ? mentorProfile.getAcademicRank() : null)
                 .build();
     }
 }

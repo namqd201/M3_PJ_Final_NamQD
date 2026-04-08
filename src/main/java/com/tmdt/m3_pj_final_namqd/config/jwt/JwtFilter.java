@@ -96,6 +96,7 @@ public class JwtFilter extends OncePerRequestFilter {
             Map<String, Object> body = new HashMap<>();
             body.put("code", ex.getCode());
             body.put("message", ex.getMessage());
+            body.put("errors", ex.getErrors());
 
             response.setStatus(ex.getStatus().value());
             response.setContentType("application/json");

@@ -33,15 +33,24 @@ public class StudentController {
         this.userRepository = userRepository;
     }
 
+    private User getCurrentUser(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
+        if (principal instanceof String username) {
+            return userRepository.findByUsernameAndIsDeletedFalse(username)
+                    .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        }
+        throw new AppException("User not found", HttpStatus.NOT_FOUND);
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','MENTOR')")
     @Operation(summary = "Danh sách sinh viên (MENTOR chỉ thấy sinh viên được gán)")
     public ResponseEntity<ApiResponse<List<StudentResponse>>> getAllStudents(
             Authentication authentication) {
-
-        String username = authentication.getName();
-        User currentUser = userRepository.findByUsernameAndIsDeletedFalse(username)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        User currentUser = getCurrentUser(authentication);
 
         return ResponseEntity.ok(
                 ResponseUtil.success(
@@ -58,10 +67,7 @@ public class StudentController {
             @PathVariable Long studentId,
             Authentication authentication
     ) {
-
-        String username = authentication.getName();
-        User currentUser = userRepository.findByUsernameAndIsDeletedFalse(username)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        User currentUser = getCurrentUser(authentication);
 
         return ResponseEntity.ok(
                 ResponseUtil.success(
@@ -94,11 +100,7 @@ public class StudentController {
             @Valid @RequestBody UpdateStudentRequest request,
             Authentication authentication
     ) {
-
-        String username = authentication.getName();
-
-        User currentUser = userRepository.findByUsernameAndIsDeletedFalse(username)
-                .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
+        User currentUser = getCurrentUser(authentication);
 
         return ResponseEntity.ok(
                 ResponseUtil.success(

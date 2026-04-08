@@ -12,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +48,7 @@ public class AssessmentRoundService {
     public AssessmentRoundResponse create(AssessmentRoundRequest request) {
 
         InternshipPhase phase = phaseRepo.findById(request.getPhaseId())
-                .orElseThrow(() -> new RuntimeException("Phase not found"));
+                .orElseThrow(() -> new AppException("PHASE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new AppException("Ngày bắt đầu phải trước ngày kết thúc", HttpStatus.BAD_REQUEST);
@@ -71,7 +73,7 @@ public class AssessmentRoundService {
     public AssessmentRoundResponse update(Long id, AssessmentRoundRequest request) {
 
         AssessmentRound round = roundRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Round not found"));
+                .orElseThrow(() -> new AppException("ROUND_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new AppException("Ngày bắt đầu phải trước ngày kết thúc", HttpStatus.BAD_REQUEST);
@@ -85,8 +87,8 @@ public class AssessmentRoundService {
 
         roundRepo.save(round);
 
-        // xoá cũ -> insert lại
-        roundCriteriaRepo.deleteByAssessmentRound_Id(id);
+        // Hard delete để tránh vướng unique (round_id, criterion_id) khi soft-delete.
+        roundCriteriaRepo.hardDeleteByAssessmentRoundId(id);
         saveCriteria(round, request.getCriteria());
 
         return mapToResponse(round);
@@ -115,10 +117,20 @@ public class AssessmentRoundService {
 
         if (criteria == null || criteria.isEmpty()) return;
 
+        Set<Long> criterionIds = new HashSet<>();
         for (CriterionWeightRequest c : criteria) {
+            if (c.getCriterionId() == null) {
+                throw new AppException("CRITERION_ID_REQUIRED", HttpStatus.BAD_REQUEST);
+            }
+            if (c.getWeight() == null || c.getWeight() <= 0) {
+                throw new AppException("WEIGHT_MUST_BE_GREATER_THAN_ZERO", HttpStatus.BAD_REQUEST);
+            }
+            if (!criterionIds.add(c.getCriterionId())) {
+                throw new AppException("DUPLICATE_CRITERION_IN_ROUND", HttpStatus.BAD_REQUEST);
+            }
 
             EvaluationCriteria ec = criteriaRepo.findById(c.getCriterionId())
-                    .orElseThrow(() -> new RuntimeException("Criterion not found"));
+                    .orElseThrow(() -> new AppException("CRITERION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
             RoundCriteria rc = new RoundCriteria();
             rc.setAssessmentRound(round);

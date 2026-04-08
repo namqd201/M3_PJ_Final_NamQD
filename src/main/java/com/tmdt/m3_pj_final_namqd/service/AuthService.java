@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,17 +33,23 @@ public class AuthService {
                 .findByUsernameAndIsDeletedFalse(username)
                 .orElseThrow(() -> {
                     log.warn("Login failed: unknown username '{}'", username);
-                    return new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
+                    Map<String, String> errors = new HashMap<>();
+                    errors.put("username", "Username not found");
+                    return new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED, errors);
                 });
 
         if (!user.getIsActive()) {
             log.warn("Login failed: inactive user '{}'", username);
-            throw new AppException("USER_DISABLED", HttpStatus.FORBIDDEN);
+            Map<String, String> errors = new HashMap<>();
+            errors.put("user", "User is disabled");
+            throw new AppException("USER_DISABLED", HttpStatus.FORBIDDEN, errors);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             log.warn("Login failed: wrong password for user '{}'", username);
-            throw new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
+            Map<String, String> errors = new HashMap<>();
+            errors.put("password", "Incorrect password");
+            throw new AppException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED,  errors);
         }
 
         return jwtProvider.generateToken(user.getUsername());
@@ -51,11 +59,15 @@ public class AuthService {
 
         // check trùng
         if (userRepository.existsByUsernameAndIsDeletedFalse(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            Map<String, String> errors = new HashMap<>();
+            errors.put("username", "Username already exists");
+            throw new AppException("USERNAME_ALREADY_EXISTS", HttpStatus.CONFLICT, errors);
         }
 
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            Map<String, String> errors = new HashMap<>();
+            errors.put("email", "Email already exists");
+            throw new AppException("EMAIL_ALREADY_EXISTS", HttpStatus.CONFLICT, errors);
         }
 
         // tạo user
@@ -82,6 +94,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .isActive(user.getIsActive())
                 .build();
     }
 }

@@ -34,8 +34,15 @@ public class MentorController {
     }
 
     private User getCurrentUser(Authentication auth) {
-        return userRepository.findByUsernameAndIsDeletedFalse(auth.getName())
-                .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
+        Object principal = auth.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
+        if (principal instanceof String username) {
+            return userRepository.findByUsernameAndIsDeletedFalse(username)
+                    .orElseThrow(() -> new AppException("User không tồn tại", HttpStatus.NOT_FOUND));
+        }
+        throw new AppException("User không tồn tại", HttpStatus.NOT_FOUND);
     }
 
     @GetMapping

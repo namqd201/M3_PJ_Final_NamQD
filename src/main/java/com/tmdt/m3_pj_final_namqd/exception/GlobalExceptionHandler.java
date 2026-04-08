@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
                         .success(false)
                         .message(ex.getCode())
                         .data(null)
-                        .errors(null)
+                        .errors(ex.getErrors())
                         .timestamp(LocalDateTime.now())
                         .build());
     }
@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
                         .success(false)
                         .message("Unauthorized")
                         .data(null)
-                        .errors(null)
+                        .errors(Map.of("error", "UNAUTHORIZED"))
                         .timestamp(LocalDateTime.now())
                         .build());
     }
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
                         .success(false)
                         .message("Forbidden")
                         .data(null)
-                        .errors(null)
+                        .errors(Map.of("error", "FORBIDDEN"))
                         .timestamp(LocalDateTime.now())
                         .build());
     }
@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
                         .success(false)
                         .message("Internal Server Error")
                         .data(null)
-                        .errors(null)
+                        .errors(Map.of("error", "INTERNAL_SERVER_ERROR"))
                         .timestamp(LocalDateTime.now())
                         .build());
     }

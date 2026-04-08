@@ -55,17 +55,19 @@ public class UserService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .isActive(user.getIsActive())
                 .build();
     }
 
     public UserResponse getUserById(Long userId) {
 
-        User user = userRepository.findByIdAndIsDeletedFalse(userId)
-                .orElseThrow(() -> new AppException("USER_NOT_FOUND", HttpStatus.NOT_FOUND));
-
-        if (!Boolean.TRUE.equals(user.getIsActive())) {
-            throw new AppException("USER_IS_INACTIVE", HttpStatus.FORBIDDEN);
-        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException("USER_NOT_FOUND", HttpStatus.NOT_FOUND));
+//        User user = userRepository.findByIdAndIsDeletedFalse(userId)
+//                .orElseThrow(() -> new AppException("USER_NOT_FOUND", HttpStatus.NOT_FOUND));
+//
+//        if (!Boolean.TRUE.equals(user.getIsActive())) {
+//            throw new AppException("USER_IS_INACTIVE", HttpStatus.FORBIDDEN);
+//        }
 
         return mapToResponse(user);
     }
