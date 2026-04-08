@@ -29,6 +29,7 @@ public interface InternshipAssignmentRepository extends JpaRepository<Internship
     List<InternshipAssignment> findByMentor_Id(Long mentorId);
 
     boolean existsByStudent_IdAndPhase_Id(Long studentId, Long phaseId);
+    boolean existsByPhase_Id(Long phaseId);
 
     @Query("""
             select distinct ia.student

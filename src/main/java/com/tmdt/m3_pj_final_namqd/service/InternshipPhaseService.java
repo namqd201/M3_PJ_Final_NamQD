@@ -4,6 +4,8 @@ import com.tmdt.m3_pj_final_namqd.dto.request.internship_phase.InternshipPhaseRe
 import com.tmdt.m3_pj_final_namqd.dto.response.InternshipPhaseResponse;
 import com.tmdt.m3_pj_final_namqd.entity.InternshipPhase;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
+import com.tmdt.m3_pj_final_namqd.repository.AssessmentRoundRepository;
+import com.tmdt.m3_pj_final_namqd.repository.InternshipAssignmentRepository;
 import com.tmdt.m3_pj_final_namqd.repository.InternshipPhaseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,8 @@ import java.util.List;
 public class InternshipPhaseService {
 
     private final InternshipPhaseRepository phaseRepository;
+    private final InternshipAssignmentRepository assignmentRepository;
+    private final AssessmentRoundRepository assessmentRoundRepository;
 
     // get all
     public List<InternshipPhaseResponse> getAll() {
@@ -77,7 +81,15 @@ public class InternshipPhaseService {
         InternshipPhase phase = phaseRepository.findById(id)
                 .orElseThrow(() -> new AppException("Giai đoạn không tồn tại", HttpStatus.NOT_FOUND));
 
-        // 🔥 TODO nâng cao: check assignment đang dùng phase này
+        boolean usedByAssignment = assignmentRepository.existsByPhase_Id(id);
+        if (usedByAssignment) {
+            throw new AppException("PHASE_IN_USE_BY_ASSIGNMENT", HttpStatus.CONFLICT);
+        }
+
+        boolean usedByRound = assessmentRoundRepository.existsByPhase_Id(id);
+        if (usedByRound) {
+            throw new AppException("PHASE_IN_USE_BY_ASSESSMENT_ROUND", HttpStatus.CONFLICT);
+        }
 
         phaseRepository.delete(phase);
     }

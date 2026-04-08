@@ -8,4 +8,5 @@ import java.util.List;
 public interface AssessmentRoundRepository extends JpaRepository<AssessmentRound, Long> {
 
     List<AssessmentRound> findByPhase_Id(Long phaseId);
+    boolean existsByPhase_Id(Long phaseId);
 }

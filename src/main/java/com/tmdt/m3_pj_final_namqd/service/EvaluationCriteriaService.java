@@ -4,7 +4,9 @@ import com.tmdt.m3_pj_final_namqd.dto.request.EvaluationCriteriaRequest;
 import com.tmdt.m3_pj_final_namqd.dto.response.EvaluationCriteriaResponse;
 import com.tmdt.m3_pj_final_namqd.entity.EvaluationCriteria;
 import com.tmdt.m3_pj_final_namqd.exception.AppException;
+import com.tmdt.m3_pj_final_namqd.repository.AssessmentResultRepository;
 import com.tmdt.m3_pj_final_namqd.repository.EvaluationCriteriaRepository;
+import com.tmdt.m3_pj_final_namqd.repository.RoundCriteriaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,8 @@ import java.util.List;
 public class EvaluationCriteriaService {
 
     private final EvaluationCriteriaRepository repository;
+    private final RoundCriteriaRepository roundCriteriaRepository;
+    private final AssessmentResultRepository assessmentResultRepository;
 
     // get all
     public List<EvaluationCriteriaResponse> getAll() {
@@ -81,7 +85,15 @@ public class EvaluationCriteriaService {
         EvaluationCriteria entity = repository.findById(id)
                 .orElseThrow(() -> new AppException("Tiêu chí không tồn tại", HttpStatus.NOT_FOUND));
 
-        //TODO: check đang dùng trong round / result
+        boolean usedByRound = roundCriteriaRepository.existsByEvaluationCriteria_Id(id);
+        if (usedByRound) {
+            throw new AppException("CRITERION_IN_USE_BY_ROUND", HttpStatus.CONFLICT);
+        }
+
+        boolean usedByResult = assessmentResultRepository.existsByCriterion_Id(id);
+        if (usedByResult) {
+            throw new AppException("CRITERION_IN_USE_BY_RESULT", HttpStatus.CONFLICT);
+        }
 
         repository.delete(entity);
     }

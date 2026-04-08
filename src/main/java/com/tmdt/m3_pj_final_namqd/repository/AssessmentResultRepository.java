@@ -12,6 +12,7 @@ public interface AssessmentResultRepository extends JpaRepository<AssessmentResu
     boolean existsByAssessmentRound_Id(Long roundId);
 
     boolean existsByAssessmentRound_IdAndCriterion_Id(Long roundId, Long criterionId);
+    boolean existsByCriterion_Id(Long criterionId);
 
     boolean existsByAssignment_IdAndAssessmentRound_IdAndCriterion_Id(
             Long assignmentId,
